@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BarberControl - Dashboard Financiero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1><span class="icon">💈</span> BarberControl</h1>
+        <p class="subtitle">Finanzas VIP Independientes</p>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Resumen de Cuentas -->
+        <section class="card module-full text-center glow-border">
+            <h2 class="section-title text-gold">Estado de Cuentas Global</h2>
+            <div class="balances-container">
+                <div class="balance-box">
+                    <div class="balance-header">
+                        <h3>DÓLARES ($)</h3>
+                        <h2 class="total" id="total-usd">$0.00</h2>
+                    </div>
+                    <div class="balance-details grid-2">
+                        <div class="detail bg-green-dark">
+                            <span>Ingresos</span>
+                            <strong id="ingresos-usd" class="text-green">$0.00</strong>
+                        </div>
+                        <div class="detail bg-red-dark">
+                            <span>Gastos</span>
+                            <strong id="gastos-usd" class="text-red">$0.00</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="balance-box">
+                    <div class="balance-header">
+                        <h3>BOLÍVARES (Bs)</h3>
+                        <h2 class="total" id="total-ves">0.00 Bs</h2>
+                    </div>
+                    <div class="balance-details grid-2">
+                        <div class="detail bg-green-dark">
+                            <span>Ingresos</span>
+                            <strong id="ingresos-ves" class="text-green">0.00 Bs</strong>
+                        </div>
+                        <div class="detail bg-red-dark">
+                            <span>Gastos</span>
+                            <strong id="gastos-ves" class="text-red">0.00 Bs</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tasas y Accesos Rápidos -->
+        <div class="column-wrapper">
+            <section class="card">
+                <div class="header-flex">
+                    <h2 class="section-title">Tasas Oficiales (BCV)</h2>
+                    <button id="btn-actualizar-tasas" class="btn-icon" title="Actualizar">🔄</button>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Dólar BCV (Bs)</label>
+                        <input type="number" id="tasa-bcv" placeholder="Cargando..." step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>Euro BCV (Bs)</label>
+                        <input type="number" id="tasa-euro" placeholder="Cargando..." step="0.01">
+                    </div>
+                </div>
+                <div class="tasa-info-box">
+                    <p id="tasa-fecha"></p>
+                    <p id="tasa-vigencia" class="text-gold font-bold"></p>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="header-flex">
+                    <h2 class="section-title">Cobro Rápido</h2>
+                    <span class="badge"><span id="client-count">0</span> Clientes</span>
+                </div>
+                <div class="grid-2">
+                    <button class="btn btn-quick btn-gold" onclick="registroRapido(5, 'usd', 'Corte $5')">+ $5 (Efectivo)</button>
+                    <button class="btn btn-quick btn-blue" onclick="registroRapido(7, 'ves', 'Corte BCV')">+ $7 (Pago Móvil)</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Formulario de Registro -->
+        <section class="card">
+            <h2 class="section-title">Registrar Movimiento</h2>
+            <div class="tabs">
+                <button class="tab active" data-type="ingreso" onclick="setTab('ingreso')">Ingreso</button>
+                <button class="tab" data-type="gasto" onclick="setTab('gasto')">Gasto</button>
+            </div>
+
+            <form id="registro-form">
+                <div class="input-group">
+                    <label>Moneda</label>
+                    <select id="moneda">
+                        <option value="usd">Dólares ($)</option>
+                        <option value="ves">Bolívares (Bs)</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Monto</label>
+                    <input type="number" id="monto" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="input-group">
+                    <label>Concepto</label>
+                    <input type="text" id="concepto" placeholder="Ej. Insumos, Cuchillas, Gel..." required>
+                </div>
+                <button type="submit" id="btn-submit" class="btn btn-primary w-100">Registrar Ingreso</button>
+            </form>
+        </section>
+
+        <!-- Reportes y Calendario -->
+        <section class="card">
+            <h2 class="section-title">Reportes y Filtros</h2>
+            <p class="text-sm text-muted mb-2">Consulta ganancias de días pasados o genera PDF.</p>
+            
+            <div class="grid-2 mb-3">
+                <div class="input-group">
+                    <label>Desde</label>
+                    <input type="date" id="filtro-desde">
+                </div>
+                <div class="input-group">
+                    <label>Hasta</label>
+                    <input type="date" id="filtro-hasta">
+                </div>
+            </div>
+
+            <div class="grid-2 mb-3">
+                <button class="btn btn-secondary text-sm" onclick="consultarPeriodo()">🔍 Ver Resumen</button>
+                <button class="btn btn-danger text-sm" onclick="generarPDF()">📄 Generar PDF</button>
+            </div>
+
+            <div class="report-quick-actions">
+                <button class="btn btn-outline text-xs" onclick="setFiltroMesActual()">Este Mes</button>
+                <button class="btn btn-outline text-xs" onclick="setFiltroHoy()">Solo Hoy</button>
+            </div>
+
+            <div id="resumen-filtro" class="resumen-box hidden">
+                <h4 class="text-gold">Resultados del periodo</h4>
+                <div class="grid-2 mt-2">
+                    <div>
+                        <p class="text-xs text-muted">Ingresos ($):</p>
+                        <strong id="res-ing-usd" class="text-green">0</strong>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted">Ingresos (Bs):</p>
+                        <strong id="res-ing-ves" class="text-green">0</strong>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted">Gastos ($):</p>
+                        <strong id="res-gas-usd" class="text-red">0</strong>
+                    </div>
+                    <div>
+                        <p class="text-xs text-muted">Gastos (Bs):</p>
+                        <strong id="res-gas-ves" class="text-red">0</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Historial Reciente -->
+        <section class="card module-full">
+            <div class="header-flex">
+                <h2 class="section-title">Últimos Movimientos</h2>
+                <span class="date text-gold" id="fecha-hoy"></span>
+            </div>
+            <div class="history-list" id="lista-movimientos">
+                <p class="empty-state">Sin movimientos registrados</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
